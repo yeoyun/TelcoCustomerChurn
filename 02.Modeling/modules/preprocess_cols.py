@@ -107,3 +107,4 @@ def save_model_with_assets(model, features, threshold, scaler, label_encoder, pa
 # ✅ 모델 로드 함수
 def load_model_with_assets(path='xgb_telco_bundle.pkl'):
     return joblib.load(path)
+

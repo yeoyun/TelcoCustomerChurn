@@ -107,46 +107,44 @@ def save_model_with_assets(model, features, threshold, scaler, label_encoder, pa
     joblib.dump(package, path)
 
 
-# ✅ 모델 로드 함수
-def load_model_with_assets(path='../02.Modeling/xgb_telco_bundle.pkl'):
-    return joblib.load(path)
+from sklearn.preprocessing import LabelEncoder
 
-def generate_tableau_features(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Tableau 시각화용 파생 변수 생성 함수
-    """
-    df = df.copy()
+def preprocess_for_tableau(df_raw: pd.DataFrame):
+    df = df_raw.copy()
 
-    # ✅ 서비스 개수 (주요 3가지 기준)
-    df['ServiceCount'] = (
-        (df['Online Security'] == 1).astype(int) +
-        (df['Tech Support'] == 1).astype(int) +
-        (df['Internet Service'] != 0).astype(int)  # No = 0, Fiber/DSL = 1,2 등
-    )
+    # ✅ 이탈 여부 이진화
+    df['Churn'] = df['Churn Label'].map({'Yes': 1, 'No': 0})
 
-    # ✅ 이탈 여부 이진 변수
-    df['ChurnFlag'] = df['Churn'].astype(int)
+    # ✅ 삭제할 컬럼 (Customer ID는 보존)
+    drop_cols = [
+        'Country', 'State', 'City', 'Quarter',
+        'Customer Status', 'Churn Label', 'Churn Score', 'Churn Category', 'Churn Reason'
+    ]
 
-    # ✅ 가입 Cohort (12개월 단위 그룹화)
-    df['CohortGroup'] = (df['Tenure Months'] // 12) * 12
+    # ✅ "Yes/No" 이진 인코딩 대상
+    binary_cols = [
+        'Under 30', 'Senior Citizen', 'Married', 'Dependents',
+        'Referred a Friend', 'Phone Service', 'Multiple Lines', 'Internet Service',
+        'Online Security', 'Online Backup', 'Device Protection Plan',
+        'Premium Tech Support', 'Streaming TV', 'Streaming Movies',
+        'Streaming Music', 'Unlimited Data', 'Paperless Billing'
+    ]
 
-    # ✅ 가족 단위 여부 (기혼 + 부양가족 여부)
-    df['IsFamily'] = ((df['Married'] == 1) & (df['Dependents'] == 1)).astype(int)
+    # ✅ Label Encoding이 필요한 범주형 (예: Gender)
+    le = LabelEncoder()
+    df['Gender'] = le.fit_transform(df['Gender'].fillna('Unknown'))
 
-    # ✅ 청년 1인가구 여부
-    df['IsYoungAlone'] = ((df['Under 30'] == 1) & (df['Dependents'] == 0)).astype(int)
+    # ✅ 수동 이진 인코딩
+    for col in binary_cols:
+        df[col] = df[col].map({'Yes': 1, 'No': 0})
 
-    # ✅ PaperlessBilling 유무 (전자고지서)
-    df['UsesPaperlessBilling'] = df['Paperless Billing'].astype(int)
+    # ✅ One-hot encoding
+    onehot_cols = ['Contract', 'Payment Method', 'Internet Type', 'Offer']
+    df = pd.get_dummies(df, columns=onehot_cols, dummy_na=True)
 
-    # ✅ 스트리밍 서비스 수
-    df['StreamingCount'] = (
-        df['Streaming TV'] + df['Streaming Movies'] + df['Streaming Music']
-    )
+    # ✅ 컬럼 제거
+    df = df.drop(columns=drop_cols, errors='ignore')
 
-    # ✅ 보안 서비스 수
-    df['SecureServiceCount'] = (
-        df['Online Security'] + df['Device Protection Plan'] + df['Premium Tech Support']
-    )
+    return df, le
 
-    return df
+
