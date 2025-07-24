@@ -9,7 +9,6 @@
 
 - **데이터셋**: Telco Customer Churn Dataset (Kaggle, IBM)
 - https://www.kaggle.com/datasets/alfathterry/telco-customer-churn-11-1-3
-- 
 - **분석 환경**: Python (Anaconda Notebook)
 - **주요 목표**:
   - 고객 이탈 여부 예측 분류 모델 개발 (F1 Score, AUC 평가)
