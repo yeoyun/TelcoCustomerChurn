@@ -47,7 +47,7 @@
 
 ---
 
-## ⚙️ 모델링 & 성능 (XGBoost + SMOTE)
+## ⚙️ 모델링 & 성능 (XGBoost)
 
 | Metric         | Class 0 | Class 1 | Macro Avg | Weighted Avg |
 |----------------|---------|---------|-----------|---------------|
